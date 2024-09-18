@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  email    String @unique @db.VarChar(100)
+  password String @db.VarChar(100)
+  name     String @db.VarChar(100)
+  Card     Card[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model Card {
+  id     Int    @id @default(autoincrement())
+  title  String @db.VarChar(100)
+  userId Int
+  user   User   @relation(fields: [userId], references: [id])
+  Task   Task[]
+
+  @@map("cards")
+}
+
+model Task {
+  id      Int       @id @default(autoincrement())
+  title   String    @db.VarChar(100)
+  cardId  Int
+  card    Card      @relation(fields: [cardId], references: [id])
+  dueDate DateTime? @db.DateTime
+  done    Boolean   @default(false)
+
+  @@map("tasks")
+}
+
+model BlacklistedToken {
+  id    Int    @id @default(autoincrement())
+  token String @unique @db.VarChar(100)
+
+  @@index([token])
+  @@map("blacklisted_tokens")
+}
