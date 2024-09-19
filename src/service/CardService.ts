@@ -1,6 +1,6 @@
 import { ResponseError } from "../error/ResponseError";
 import { AuthRequest } from "../model/AuthModel";
-import { AddCardRequest, GetCardsResponse, UpdateCardRequest } from "../model/CardModel";
+import { AddCardRequest, DeleteCardRequest, GetCardsResponse, UpdateCardRequest } from "../model/CardModel";
 import { CardRepository } from "../repository/CardRepository";
 import { UserRepository } from "../repository/UserRepository";
 import { Validation } from "../utils/validation";
@@ -68,7 +68,9 @@ export class CardService {
     return await CardRepository.findByIdAndUpdate(data.id, data.title);
   }
 
-  static async deleteCard(auth: AuthRequest, cardId: number) {
+  static async deleteCard(auth: AuthRequest, request: DeleteCardRequest) {
+    const data = Validation.validation(CardValidation.DELETE, request);
+
     const userId: number = auth.user?.id as number;
 
     const user = await UserRepository.findById(userId);
@@ -77,7 +79,7 @@ export class CardService {
       throw new ResponseError(404, "User not found");
     }
 
-    const card = await CardRepository.findById(cardId);
+    const card = await CardRepository.findById(data.id);
 
     if (!card) {
       throw new ResponseError(404, "Card not found");
@@ -87,6 +89,6 @@ export class CardService {
       throw new ResponseError(403, "Forbidden");
     }
 
-    return await CardRepository.findByIdAndDelete(cardId);
+    return await CardRepository.findByIdAndDelete(data.id);
   }
 }

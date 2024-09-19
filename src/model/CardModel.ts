@@ -18,3 +18,7 @@ export interface UpdateCardRequest {
   id: number;
   title: string;
 }
+
+export interface DeleteCardRequest {
+  id: number;
+}

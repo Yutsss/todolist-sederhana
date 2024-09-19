@@ -1,11 +1,5 @@
 import db from "../config/db";
 
-// id     Int    @id @default(autoincrement())
-// title  String @db.VarChar(100)
-// userId Int
-// user   User   @relation(fields: [userId], references: [id])
-// Task   Task[]
-
 export class CardRepository{
 
   static async create(title: string, userId: number) {
