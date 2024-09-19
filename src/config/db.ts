@@ -34,7 +34,6 @@ const dbWithEvents = global._db as PrismaClient & {
 
 dbWithEvents.$on("query", (e) => {
   prismaLogger.info(e);
-  appLogger.info(e);
 });
 
 dbWithEvents.$on("info", (e) => {

@@ -20,9 +20,9 @@ export const AuthMiddleware = async (req: AuthRequest, res: Response, next: Next
       throw new ResponseError(401, 'Unauthorized');
     }
 
-    const secret: string = process.env.SECRET_KEY as string;
+    const secret: string = process.env.JWT_SECRET as string;
     if (!secret) {
-      throw new ResponseError(500, 'Internal Server Error: Secret key is not set');
+      throw new ResponseError(500, 'Internal Server Error');
     }
 
     const decoded = jwt.verify(token, secret) as TokenPayload;
@@ -32,7 +32,6 @@ export const AuthMiddleware = async (req: AuthRequest, res: Response, next: Next
     if (err instanceof jwt.JsonWebTokenError) {
       return errorResponse(res, new ResponseError(401, 'Unauthorized'));
     }
-
     return errorResponse(res, err instanceof ResponseError ? err : new ResponseError(500, 'Internal Server Error'));
   }
 };

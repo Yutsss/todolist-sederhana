@@ -4,7 +4,15 @@ export interface CreateUserRequest {
   password: string;
 }
 
-export interface UserResponse {
+export interface GetUserResponse {
+  name: string;
+  email: string;
+}
+
+export interface UpdateUserRequest extends CreateUserRequest {
+}
+
+export interface UpdateUserResponse {
   name: string;
   email: string;
 }

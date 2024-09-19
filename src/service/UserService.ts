@@ -1,11 +1,12 @@
-import { CreateUserRequest } from "../model/UserModel";
+import { CreateUserRequest, GetUserResponse, UpdateUserRequest, UpdateUserResponse } from "../model/UserModel";
 import { UserValidation } from "../validation/UserValidation";
 import { Validation } from "../utils/validation";
 import { UserRepository } from "../repository/UserRepository";
 import { ResponseError } from "../error/ResponseError";
 import bcrypt from "bcrypt";
 import { JwtToken } from "../utils/jwtToken";
-import { LoginRequest, LoginResponse, TokenPayload } from "../model/AuthModel";
+import { AuthRequest, LoginRequest, LoginResponse, TokenPayload } from "../model/AuthModel";
+import { BlacklistedTokenRepository } from "../repository/BlacklistedTokenRepository";
 
 export class UserService {
 
@@ -50,4 +51,54 @@ export class UserService {
     }
   }
 
+  static async getUser(auth: AuthRequest): Promise<GetUserResponse> {
+    const userId: number = auth.user?.id as number;
+    const user = await UserRepository.findById(userId);
+
+    if (!user) {
+      throw new ResponseError(404, "User not found");
+    }
+
+    return {
+      name: user.name,
+      email: user.email,
+    };
+  }
+
+  static async updateUser(auth: AuthRequest, request: UpdateUserRequest): Promise<UpdateUserResponse> {
+    const userId: number = auth.user?.id as number;
+    const data = Validation.validation(UserValidation.UPDATE, request);
+
+    if(!data.email && !data.name && !data.password) {
+      throw new ResponseError(400, "At least one field must be updated");
+    }
+
+    if(data.password) {
+      const salt: number = parseInt(process.env.SALT_ROUNDS || "");
+      data.password = await bcrypt.hash(data.password, salt);
+    }
+
+    const updatedUser = await UserRepository.findByIdAndUpdate(userId, data);
+
+    if (!updatedUser) {
+      throw new ResponseError(404, "User not found");
+    }
+
+    return {
+      name: updatedUser.name,
+      email: updatedUser.email,
+    };
+  }
+
+  static async logout(auth: AuthRequest, token: string) {
+    const userId = auth.user?.id as number;
+
+    const user = await UserRepository.findById(userId);
+
+    if (!user) {
+      throw new ResponseError(404, "User not found");
+    }
+
+    return await BlacklistedTokenRepository.create(token)
+  }
 }

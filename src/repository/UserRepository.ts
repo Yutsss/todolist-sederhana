@@ -26,4 +26,13 @@ export class UserRepository {
       }
     });
   }
+
+  static async findByIdAndUpdate(id: number, data: any) {
+    return db.user.update({
+      where: {
+        id: id
+      },
+      data: data
+    });
+  }
 }

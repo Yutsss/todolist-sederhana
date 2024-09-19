@@ -8,8 +8,6 @@ export const prismaLogger = winston.createLogger({
     new winston.transports.File({
       filename: path.join(__dirname, "../../logs/prisma.log"),
       format: winston.format.combine(
-        // winston.format.colorize(),
-        // winston.format.simple(),
         winston.format.timestamp(),
         winston.format.printf(({ timestamp, level, message, ...meta }) => {
           const metaString = Object.keys(meta).length ? JSON.stringify(meta, null, 2) : '';
