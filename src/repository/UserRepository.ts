@@ -1,12 +1,13 @@
 import db from "../config/db";
 
 export class UserRepository {
-  static async create(email: string, hashedPassword: string, name: string) {
+  static async create(email: string, hashedPassword: string, name: string, googleId?: string) {
     return db.user.create({
       data: {
         email: email,
         password: hashedPassword,
-        name: name
+        name: name,
+        googleId: googleId || null
       }
     });
   }
@@ -15,6 +16,14 @@ export class UserRepository {
     return db.user.findUnique({
       where: {
         email: email
+      }
+    });
+  }
+
+  static async findByGoogleId(googleId: string) {
+    return db.user.findUnique({
+      where: {
+        googleId: googleId
       }
     });
   }

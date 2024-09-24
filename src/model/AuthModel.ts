@@ -1,5 +1,10 @@
 import { Request } from "express";
 
+export interface User {
+  id: number;
+  role: string;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;
@@ -14,5 +19,6 @@ export interface TokenPayload {
 }
 
 export interface AuthRequest extends Request {
-  user?: TokenPayload;
+  user: User;
 }
+

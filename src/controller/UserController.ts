@@ -34,6 +34,20 @@ export class UserController {
     }
   }
 
+  static async loginWithGoogle (req: Request, res: Response) {
+    try {
+      const request = req as AuthRequest;
+      const response = await UserService.loginWithGoogle(request);
+      successResponse(res, 200, "Login with Google successful", response);
+    } catch (err) {
+      if (err instanceof Error) {
+        errorResponse(res, err);
+      } else {
+        errorResponse(res, new ResponseError (500, 'Internal Server Error'));
+      }
+    }
+  }
+
   static async get (req: Request, res: Response) {
     try {
       const request = req as AuthRequest;

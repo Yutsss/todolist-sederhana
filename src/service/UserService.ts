@@ -34,10 +34,34 @@ export class UserService {
       throw new ResponseError(401, "Invalid email or password");
     }
 
+    if (!user.password){
+      throw new ResponseError(401, "Invalid email or password");
+    }
+
     const isPasswordMatch = await bcrypt.compare(data.password, user.password);
 
     if (!isPasswordMatch) {
       throw new ResponseError(401, "Invalid email or password");
+    }
+
+    const payload: TokenPayload = {
+      id: user.id,
+    };
+
+    const token = JwtToken.generateToken(payload);
+
+    return {
+      token: token,
+    }
+  }
+
+  static async loginWithGoogle (request: AuthRequest): Promise<LoginResponse> {
+    const userId = request.user?.id as number;
+
+    const user = await UserRepository.findById(userId);
+
+    if (!user) {
+      throw new ResponseError(401, "Unauthorized");
     }
 
     const payload: TokenPayload = {

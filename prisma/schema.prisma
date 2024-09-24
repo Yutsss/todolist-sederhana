@@ -13,11 +13,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
-  id       Int    @id @default(autoincrement())
-  email    String @unique @db.VarChar(100)
-  password String @db.VarChar(100)
-  name     String @db.VarChar(100)
+  id       Int     @id @default(autoincrement())
+  email    String  @unique @db.VarChar(100)
+  password String? @db.VarChar(100)
+  name     String  @db.VarChar(100)
+  googleId String? @unique @db.VarChar(100)
+  role     Role    @default(USER)
   Card     Card[]
 
   @@index([email])
