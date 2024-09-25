@@ -9,7 +9,14 @@ export interface GetUserResponse {
   email: string;
 }
 
-export interface UpdateUserRequest extends CreateUserRequest {
+export interface UpdateUserRequest {
+  name?: string;
+  email?: string;
+  password?: string;
+}
+
+export interface UpdatePasswordGoogleUser {
+  password: string;
 }
 
 export interface UpdateUserResponse {

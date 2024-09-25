@@ -11,6 +11,7 @@ privateRouter.use(AuthMiddleware);
 
 privateRouter.get("/users", UserController.get);
 privateRouter.put("/users", UserController.update);
+privateRouter.put("/users/google/update-password", UserController.updateGoogleUserPassword);
 privateRouter.post("/users/logout", UserController.logout);
 privateRouter.post("/cards", CardController.add);
 privateRouter.get("/cards", CardController.getAll);

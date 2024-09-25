@@ -28,4 +28,10 @@ export class UserValidation {
     password: z.string().min(1, "Password must contain at least 1 character").max(100, "Password cannot be longer than 100 characters").optional(),
     name: z.string().min(1, "Name must contain at least 1 character").max(100, "Name cannot be longer than 100 characters").optional()
   });
+
+  static readonly UPDATE_PASSWORD_GOOGLE_USER : ZodType = z.object({
+    password: z.string({
+      required_error: "Password is required"
+    }).min(1, "Password must contain at least 1 character").max(100, "Password cannot be longer than 100 characters")
+  });
 }

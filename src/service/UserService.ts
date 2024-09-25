@@ -1,4 +1,4 @@
-import { CreateUserRequest, GetUserResponse, UpdateUserRequest, UpdateUserResponse } from "../model/UserModel";
+import { CreateUserRequest, GetUserResponse, UpdatePasswordGoogleUser, UpdateUserRequest, UpdateUserResponse } from "../model/UserModel";
 import { UserValidation } from "../validation/UserValidation";
 import { Validation } from "../utils/validation";
 import { UserRepository } from "../repository/UserRepository";
@@ -61,7 +61,7 @@ export class UserService {
     const user = await UserRepository.findById(userId);
 
     if (!user) {
-      throw new ResponseError(401, "Unauthorized");
+      throw new ResponseError(401, "Unauthorized!");
     }
 
     const payload: TokenPayload = {
@@ -75,12 +75,28 @@ export class UserService {
     }
   }
 
+  static async updatePasswordForGoogleUser(auth: AuthRequest, request: UpdatePasswordGoogleUser) {
+    const data = Validation.validation(UserValidation.UPDATE_PASSWORD_GOOGLE_USER, request);
+
+    const userId = auth.user?.id as number;
+    const user = await UserRepository.findById(userId);
+
+    if(!user || user.googleId === null) {
+      throw new ResponseError(401, "Unauthorized!");
+    }
+
+    const salt: number = parseInt(process.env.SALT_ROUNDS || "");
+    data.password = await bcrypt.hash(data.password, salt);
+
+    return await UserRepository.findByIdAndUpdate(userId, { password: data.password });
+  }
+
   static async getUser(auth: AuthRequest): Promise<GetUserResponse> {
     const userId: number = auth.user?.id as number;
     const user = await UserRepository.findById(userId);
 
     if (!user) {
-      throw new ResponseError(404, "User not found");
+      throw new ResponseError(404, "Unauthorized!");
     }
 
     return {
@@ -105,7 +121,7 @@ export class UserService {
     const updatedUser = await UserRepository.findByIdAndUpdate(userId, data);
 
     if (!updatedUser) {
-      throw new ResponseError(404, "User not found");
+      throw new ResponseError(404, "Unauthorized!");
     }
 
     return {
@@ -120,7 +136,7 @@ export class UserService {
     const user = await UserRepository.findById(userId);
 
     if (!user) {
-      throw new ResponseError(404, "User not found");
+      throw new ResponseError(404, "Unauthorized!");
     }
 
     return await BlacklistedTokenRepository.create(token)

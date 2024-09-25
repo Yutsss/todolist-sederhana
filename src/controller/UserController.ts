@@ -77,6 +77,21 @@ export class UserController {
     }
   }
 
+  static async updateGoogleUserPassword (req: Request, res: Response) {
+    try {
+      const request = req as AuthRequest;
+      const data = request.body;
+      const response = await UserService.updatePasswordForGoogleUser(request, data);
+      successResponse(res, 200, "User updated successfully", response);
+    } catch (err) {
+      if (err instanceof Error) {
+        errorResponse(res, err);
+      } else {
+        errorResponse(res, new ResponseError (500, 'Internal Server Error'));
+      }
+    }
+  }
+
   static async logout (req: Request, res: Response) {
     try {
       const request = req as AuthRequest;
