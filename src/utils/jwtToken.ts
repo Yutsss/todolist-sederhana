@@ -8,4 +8,13 @@ export class JwtToken {
       return jwt.sign(payload, secret, { expiresIn: process.env.JWT_DURATION as string });
     }
 
+    static generateRefreshToken(payload: TokenPayload): string {
+      const secret = process.env.JWT_REFRESH_SECRET as string;
+      return jwt.sign(payload, secret, { expiresIn: process.env.JWT_REFRESH_DURATION as string });
+    }
+
+    static verifyRefreshToken(token: string): TokenPayload {
+      const secret = process.env.JWT_REFRESH_SECRET as string;
+      return jwt.verify(token, secret) as TokenPayload;
+    }
 }

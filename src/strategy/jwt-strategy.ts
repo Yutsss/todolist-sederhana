@@ -9,7 +9,7 @@ const opt = {
 };
 
 const jwtStrategy = new Strategy(opt, async (payload, done) => {
-    const userData = await UserRepository.findById(payload.id);
+    const userData = await UserRepository.findById(payload.userId);
 
     const user = {
       id: userData?.id,

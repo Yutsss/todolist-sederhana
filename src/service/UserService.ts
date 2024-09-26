@@ -1,12 +1,14 @@
 import { CreateUserRequest, GetAllUsersResponse, GetUserResponse, UpdatePasswordGoogleUser, UpdateUserRequest, UpdateUserResponse } from "../model/UserModel";
-import { UserValidation } from "../validation/UserValidation";
-import { Validation } from "../utils/validation";
+import { AuthRequest, LoginRequest, LoginResponse, RefreshRequest, RefreshResponse, RefreshTokenPayload, TokenPayload } from "../model/AuthModel";
 import { UserRepository } from "../repository/UserRepository";
+import { BlacklistedTokenRepository } from "../repository/BlacklistedTokenRepository";
+import { SessionRepository } from "../repository/SessionRepository";
+import { UserValidation } from "../validation/UserValidation";
+import { SessionValidation } from "../validation/SessionValidation";
+import { Validation } from "../utils/validation";
 import { ResponseError } from "../error/ResponseError";
 import bcrypt from "bcrypt";
 import { JwtToken } from "../utils/jwtToken";
-import { AuthRequest, LoginRequest, LoginResponse, TokenPayload } from "../model/AuthModel";
-import { BlacklistedTokenRepository } from "../repository/BlacklistedTokenRepository";
 import { verifyOldPassword } from "../utils/verifyOldPassword";
 import { extractTokenExpiry } from "../utils/extract-token-expiry";
 
@@ -28,7 +30,7 @@ export class UserService {
   }
 
   static async loginUser (request: LoginRequest): Promise<LoginResponse> {
-    const data = Validation.validation(UserValidation.LOGIN, request);
+    const data = Validation.validation(UserValidation.LOGIN, request.body);
 
     const user = await UserRepository.findByEmail(data.email);
 
@@ -47,13 +49,26 @@ export class UserService {
     }
 
     const payload: TokenPayload = {
-      id: user.id,
+      userId: user.id,
     };
 
     const token = JwtToken.generateToken(payload);
 
+    const userAgent = request.user_agent;
+
+    const refreshPayload: RefreshTokenPayload = {
+      userId: user.id,
+      userAgent: userAgent,
+    };
+
+    const refreshToken = JwtToken.generateRefreshToken(refreshPayload);
+    const refreshExpiry = extractTokenExpiry(refreshToken);
+
+    await SessionRepository.create(user.id, refreshToken, userAgent, refreshExpiry);
+
     return {
-      token: token,
+      accessToken: token,
+      refreshToken: refreshToken,
     }
   }
 
@@ -67,17 +82,56 @@ export class UserService {
     }
 
     const payload: TokenPayload = {
-      id: user.id,
+      userId: user.id,
+    };
+
+    const token = JwtToken.generateToken(payload);
+
+    const userAgent = request.headers["user-agent"] as string;
+
+    const refreshPayload: RefreshTokenPayload = {
+      userId: user.id,
+      userAgent: userAgent,
+    };
+
+    const refreshToken = JwtToken.generateRefreshToken(refreshPayload);
+    const refreshExpiry = extractTokenExpiry(refreshToken);
+
+    await SessionRepository.create(user.id, refreshToken, userAgent, refreshExpiry);
+
+    return {
+      accessToken: token,
+      refreshToken: refreshToken,
+    }
+  }
+
+  static async refreshAccessToken (request: RefreshRequest): Promise<RefreshResponse> {
+    const data = Validation.validation(SessionValidation.REFRESH_TOKEN, request);
+
+    const session = await SessionRepository.findByRefreshToken(data.refreshToken);
+
+    if (!session) {
+      throw new ResponseError(401, "Unauthorized!");
+    }
+
+    const isSameUserAgent = session.user_agent === data.userAgent;
+
+    if (!isSameUserAgent) {
+      throw new ResponseError(401, "Unauthorized!");
+    }
+
+    const payload: TokenPayload = {
+      userId: session.userId,
     };
 
     const token = JwtToken.generateToken(payload);
 
     return {
-      token: token,
+      accessToken: token,
     }
   }
 
-  static async updatePasswordForGoogleUser(auth: AuthRequest, request: UpdatePasswordGoogleUser) {
+  static async updatePasswordForGoogleUser(auth: AuthRequest, request: UpdatePasswordGoogleUser): Promise<UpdateUserResponse> {
     const data = Validation.validation(UserValidation.UPDATE_PASSWORD_GOOGLE_USER, request);
 
     const userId = auth.user?.id as number;
@@ -90,7 +144,12 @@ export class UserService {
     const salt: number = parseInt(process.env.SALT_ROUNDS || "");
     data.password = await bcrypt.hash(data.password, salt);
 
-    return await UserRepository.findByIdAndUpdate(userId, { password: data.password });
+    const updatedData = await UserRepository.findByIdAndUpdate(userId, { password: data.password });
+
+    return {
+      name: updatedData.name,
+      email: updatedData.email,
+    }
   }
 
   static async getUser(auth: AuthRequest): Promise<GetUserResponse> {
@@ -159,7 +218,7 @@ export class UserService {
     };
   }
 
-  static async logout(auth: AuthRequest, token: string) {
+  static async logout(auth: AuthRequest, token: string, refreshToken: string) {
     const userId = auth.user?.id as number;
     const expiry = extractTokenExpiry(token);
 
@@ -168,6 +227,14 @@ export class UserService {
     if (!user) {
       throw new ResponseError(404, "Unauthorized!");
     }
+
+    const session = await SessionRepository.findByRefreshToken(refreshToken);
+
+    if (!session) {
+      throw new ResponseError(404, "Unauthorized!");
+    }
+
+    await SessionRepository.deleteByRefreshToken(refreshToken);
 
     return await BlacklistedTokenRepository.create(token, expiry)
   }

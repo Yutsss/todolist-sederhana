@@ -7,16 +7,34 @@ export interface User {
 }
 
 export interface LoginRequest {
-  email: string;
-  password: string;
+  body: {
+    email: string;
+    password: string;
+  };
+  user_agent: string;
 }
 
 export interface LoginResponse {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface RefreshRequest {
+  refreshToken: string;
+  userAgent: string;
+}
+
+export interface RefreshResponse {
+  accessToken: string;
 }
 
 export interface TokenPayload {
-  id: number;
+  userId: number;
+}
+
+export interface RefreshTokenPayload {
+  userId: number;
+  userAgent: string;
 }
 
 export interface AuthRequest extends Request {

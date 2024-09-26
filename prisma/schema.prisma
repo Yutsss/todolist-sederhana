@@ -60,3 +60,14 @@ model BlacklistedToken {
   @@index([token])
   @@map("blacklisted_tokens")
 }
+
+model Session {
+  id           String @id @default(uuid())
+  userId       Int
+  refreshToken String @unique @db.VarChar(255)
+  user_agent   String @db.VarChar(255)
+  expiry       Int
+
+  @@index([refreshToken])
+  @@map("sessions")
+}

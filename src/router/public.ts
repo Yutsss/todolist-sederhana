@@ -8,5 +8,6 @@ publicRouter.post("/users", UserController.register);
 publicRouter.post("/users/login", UserController.login);
 publicRouter.post("/users/auth/google", GoogleAuthMiddleware.concern);
 publicRouter.get("/users/auth/google/callback", GoogleAuthMiddleware.callback, UserController.loginWithGoogle);
+publicRouter.post("/users/refresh-token", UserController.refreshToken);
 
 export default publicRouter;

@@ -22,7 +22,10 @@ export class UserController {
 
   static async login (req: Request, res: Response) {
     try {
-      const request = req.body as LoginRequest;
+      const request = {
+        body: req.body,
+        user_agent: req.headers["user-agent"] as string
+      };
       const response = await UserService.loginUser(request);
       successResponse(res, 200, "Login successful", response);
     } catch (err) {
@@ -39,6 +42,23 @@ export class UserController {
       const request = req as AuthRequest;
       const response = await UserService.loginWithGoogle(request);
       successResponse(res, 200, "Login with Google successful", response);
+    } catch (err) {
+      if (err instanceof Error) {
+        errorResponse(res, err);
+      } else {
+        errorResponse(res, new ResponseError (500, 'Internal Server Error'));
+      }
+    }
+  }
+
+  static async refreshToken (req: Request, res: Response) {
+    try {
+      const request = {
+        refreshToken: req.headers["refresh-token"] as string,
+        userAgent: req.headers["user-agent"] as string
+      }
+      const response = await UserService.refreshAccessToken(request);
+      successResponse(res, 200, "Token refreshed successfully", response);
     } catch (err) {
       if (err instanceof Error) {
         errorResponse(res, err);
@@ -109,7 +129,8 @@ export class UserController {
     try {
       const request = req as AuthRequest;
       const token = request.headers.authorization?.split(" ")[1] as string;
-      await UserService.logout(request, token);
+      const refreshToken = request.headers["refresh-token"] as string;
+      await UserService.logout(request, token, refreshToken);
       successResponse(res, 200, "Logout successfully");
       
     } catch (err) {
