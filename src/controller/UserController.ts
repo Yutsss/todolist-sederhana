@@ -62,6 +62,19 @@ export class UserController {
     }
   }
 
+  static async getAll (req: Request, res: Response) {
+    try {
+      const response = await UserService.getAllUsers();
+      successResponse(res, 200, "Success Getting User", response);
+    } catch (err) {
+      if (err instanceof Error) {
+        errorResponse(res, err);
+      } else {
+        errorResponse(res, new ResponseError (500, 'Internal Server Error'));
+      }
+    }
+  }
+
   static async update (req: Request, res: Response) {
     try {
       const request = req as AuthRequest;

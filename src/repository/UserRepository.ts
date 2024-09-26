@@ -12,6 +12,10 @@ export class UserRepository {
     });
   }
 
+  static async all() {
+    return db.user.findMany();
+  }
+
   static async findByEmail(email: string) {
     return db.user.findUnique({
       where: {

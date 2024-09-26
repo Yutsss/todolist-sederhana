@@ -1,4 +1,5 @@
 import "../config/envConfig";
+import "../config/cron";
 import express from 'express';
 import publicRouter from "../router/public";
 import privateRouter from "../router/private";

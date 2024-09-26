@@ -53,8 +53,9 @@ model Task {
 }
 
 model BlacklistedToken {
-  id    Int    @id @default(autoincrement())
-  token String @unique @db.VarChar(255)
+  id     Int    @id @default(autoincrement())
+  token  String @unique @db.VarChar(255)
+  expiry Int
 
   @@index([token])
   @@map("blacklisted_tokens")

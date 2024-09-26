@@ -1,8 +1,9 @@
+import { Role } from "@prisma/client";
 import { Request } from "express";
 
 export interface User {
   id: number;
-  role: string;
+  role: Role;
 }
 
 export interface LoginRequest {
